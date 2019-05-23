@@ -99,6 +99,7 @@ class Game:
                 self.screen.blit(self.images[level_matrix[i][c]], (c * box_size, i * box_size))
         pygame.display.update()
 
+
     def init_level(self, level):
         self.current_level = Level(level)
         #self.draw_level(self.current_level.get_matrix())
@@ -566,7 +567,6 @@ class Game:
             #  if we want to render our agent, wait some time 
             if (render):
                 self.clock.tick(FPS)
-
             #  check if game finished
             if (result == RESULT_PLAYER_WON or result == RESULT_PLAYER_DEAD):
                 if (play_sound):

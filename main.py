@@ -166,8 +166,8 @@ elif (player_string == "GENETIC"):
     
     #  we will play until we collect all apples
     finished = False
+    finish_counter = 0
     iteration_counter = 0
-    
     while (not finished):
         #  save collected apple counts for statistics
         collected_apple_counts = np.zeros(POPULATION_SIZE)
@@ -188,6 +188,7 @@ elif (player_string == "GENETIC"):
 
             #  add wall crashes
             individual.fitness_value += np.sum(wall_crash_penalties)
+            #print("{}. individual played. Fitness value: {}".format((index+1),individual.fitness_value))
 
 
 
@@ -198,7 +199,7 @@ elif (player_string == "GENETIC"):
         #  check if enough individuals with best fitness played good enough
         best_individuals = [genetic_agent.individuals[i] for i in range(REQUIRED_INDIVIDUAL_COUNT)]
         best_fitness_values = [individual.fitness_value for individual in best_individuals]
-        print("Iteration {} - Best fitness values {}".format(iteration_counter, best_fitness_values))
+        #print("Iteration {} - Best fitness values {}".format(iteration_counter, best_fitness_values))
         
             
         
@@ -211,11 +212,15 @@ elif (player_string == "GENETIC"):
         test_total_reward = collected_apple_count*COLLECT_APPLE_REWARD + np.sum(apple_distance_rewards) + np.sum(wall_crash_penalties) + robot_death_penalty
         print("Testing best agent of iteration {}, elapsed time step:{}, reward:{}".format(iteration_counter, elapsed_time_step, test_total_reward))
 
+        #if(iteration_counter > 500000):
+        #   finished = True
 
         #  check if the training is finished
         if np.sum(best_fitness_values) >= REQUIRED_SCORE_THRESHOLD*REQUIRED_INDIVIDUAL_COUNT:
-            print("DONE!")
-            finished = True
+            print("DONE! {}".format(finish_counter))
+            finish_counter += 1
+            if (finish_counter > 250):
+                finished = True
 
             #  save best REQUIRED_INDIVIDUAL_COUNT agents
             for (j, best_individual) in enumerate(best_individuals):

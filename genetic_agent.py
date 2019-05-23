@@ -35,6 +35,12 @@ class Individual():
         self.max_ascii_value = max([ord(c) for c in self.mapping.keys()])
         self.min_ascii_value = min([ord(c) for c in self.mapping.keys()])
         self.ascii_difference = self.max_ascii_value - self.min_ascii_value
+
+        #print(self.network.instance_id)
+        #print(self.network.layers)
+        #print(self.network.parameters())
+
+
         #self.mapping = 
 
     def grid_to_network_input(self, grid):
@@ -181,16 +187,28 @@ class GeneticAgent():
         if (not self.individuals_sorted):
             self.sort_individuals()
 
+        #for individual in self.individuals:
+        #   print(individual.network.instance_id)
+
 
         #  THESE METHODS SHOULD ONLY BE CALLED WITHIN UPDATE !
         #DO NOT CALL EXPLICITY FROM ANYWHERE ELSE
         selected_individuals = self.selection()
+
+        bestFittes = []
+        for individual in selected_individuals:
+            bestFittes.append(individual.fitness_value)
+
+        print("Best fittest: {}".format(bestFittes))
+        print("Best Individual ID: {}" .format(selected_individuals[0].network.instance_id))
+
         crossed_individuals = self.crossover()
         mutated_individuals = self.mutation(crossed_individuals)
 
-
+        selected_individuals.extend(crossed_individuals)
+        selected_individuals.extend(mutated_individuals)
         #  next generation is formed by selecteds + crosseds + mutateds
-        self.individuals = selected_individuals + crossed_individuals + mutated_individuals
+        self.individuals = selected_individuals
         
 
         if (len(self.individuals) != self.population_size):
@@ -216,14 +234,15 @@ class GeneticAgent():
         will be selected by this function
     """
     def selection(self):
-        selected_individuals = [0] * self.selection_size
+        #selected_individuals = [0] * self.selection_size
 
         """
         YOUR CODE START
         Fill the list selected_individuals 
         """
 
-        
+        selected_individuals = self.individuals[:self.selection_size]
+        self.next_individuals = selected_individuals
         """
         YOUR CODE END
         """
@@ -240,15 +259,30 @@ class GeneticAgent():
         will be selected by this function
     """
     def crossover(self):
-        crossed_individuals = [0] * self.crossover_size
-        
+        #crossed_individuals = [0] * self.crossover_size
+        crossed_individuals = []
         """
         YOUR CODE START
         Fill the list crossed individuals
         """
       
         for i in range(self.crossover_size):
-            pass
+            parent1 = random.choice(self.next_individuals)
+            parent2 = random.choice(self.next_individuals)
+            child = self.create_random_individual()
+            while parent1.network.instance_id == parent2.network.instance_id:
+                parent2 = random.choice(self.next_individuals)
+
+            if isinstance(parent1,Individual) and isinstance(parent2,Individual):
+                for layerIdx, eachLayer in enumerate(parent1.network.layers):
+                    for rowIdx,layerRow in enumerate(eachLayer[0]):
+                        rowSize = len(layerRow)
+                        split =random.randint(0,rowSize)
+                        p1row = layerRow[0:split]
+                        p2row = parent2.network.layers[layerIdx][0][rowIdx][split:rowSize]
+                        child.network.layers[layerIdx][0][rowIdx] = np.concatenate((p1row,p2row))
+
+            crossed_individuals.append(child)
 
         """
         YOUR CODE END
@@ -266,8 +300,26 @@ class GeneticAgent():
     You do not have to use crossed_individuals parameter if you don't want to
     """
     def mutation(self, crossed_individuals):
-        mutated_individuals = [0] * self.mutation_size
-        
+        mutated_individuals = []
+
+
+        for individual in crossed_individuals:
+            mutatedIndividual = self.create_random_individual()
+            if isinstance(individual,Individual):
+                for layerIdx, eachLayer in enumerate(individual.network.layers):
+                    for rowIdx, layerRow in enumerate(eachLayer[0]):
+                        for colIdx, layerColumn in enumerate(layerRow):
+                            if (random.uniform(0.0,1.0) <= self.mutation_chance):
+                                #print("something Mutated")
+                                rand = random.uniform(self.mutation_min_magnitude, self.mutation_max_magnitude)
+                                if (random.uniform(0.0,1.0) <= 0.5):
+                                    layerColumn += rand
+                                else:
+                                    layerColumn -= rand
+                            mutatedIndividual.network.layers[layerIdx][0][rowIdx][colIdx] = layerColumn
+            mutated_individuals.append(mutatedIndividual)
+
+
         """
         Fill the list mutated_individuals
         
@@ -302,9 +354,6 @@ class GeneticAgent():
         mutated_individuals[i] = new_individual
         """
         
-        
-        for i in range(self.mutation_size):
-            pass
 
         return mutated_individuals
         
